@@ -1,7 +1,7 @@
 """
 Data collection script designed to simulate data ingestion for the batch pipeline.
 
-Author: Maciel Calebe Vidal
+Author: Prof. Dr. Maciel Calebe Vidal, INSPER, São Paulo - SP - Brazil, 2024.
 """
 
 import sys
