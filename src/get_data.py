@@ -4,16 +4,15 @@ Data collection script designed to simulate data ingestion for the batch pipelin
 Author: Prof. Dr. Maciel Calebe Vidal, INSPER, São Paulo - SP - Brazil, 2024.
 """
 
-import sys
 import os
-import numpy as np
+import sys
 import random
+import logging
 import datetime
 import calendar
-import pandas as pd
 import itertools
-
-
+import numpy as np
+import pandas as pd
 class Config:
     stores = {
         5000: {
@@ -61,8 +60,29 @@ class Config:
     }
     product_ids = np.random.randint(1000, 3000, size=30)
 
+def configure_logging() -> None:
+    """
+    Configure logging.
+    """
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)-18s %(name)-8s %(levelname)-8s %(message)s",
+        datefmt="%y-%m-%d %H:%M",
+        filename="data/logs/get_data.log",
+        filemode="a",
+    )
 
-def generate_day_sales(store_id, date):
+def generate_day_sales(store_id: int, date: datetime.date) -> pd.DataFrame:
+    """
+    Generate sales data for a given store and date.
+
+    Args:
+        store_id (int): Store ID.
+        date (datetime.date): Date.
+    
+    Returns:
+        pd.DataFrame: Sales data.
+    """
     config = Config.stores[store_id]
     year, month, day = date.year, date.month, date.day
     n_sales = np.random.poisson(lam=config["avg_n"])
@@ -92,7 +112,17 @@ def generate_day_sales(store_id, date):
     )
 
 
-def generate_predict_register(store_id, date):
+def generate_predict_register(store_id: int, date: datetime.date) -> pd.DataFrame:
+    """
+    Generate a register for prediction.
+
+    Args:
+        store_id (int): Store ID.
+        date (datetime.date): Date.
+    
+    Returns:
+        pd.DataFrame: Register for prediction.
+    """
     return pd.DataFrame(
         {
             "store_id": [store_id],
@@ -103,8 +133,22 @@ def generate_predict_register(store_id, date):
         }
     )
 
-
 def generate_data(year_from, month_from, day_from, year_to, month_to, day_to, type_):
+    """
+    Generate data for a given period.
+
+    Args:
+        year_from (int): Start year.
+        month_from (int): Start month.
+        day_from (int): Start day.
+        year_to (int): End year.
+        month_to (int): End month.
+        day_to (int): End day.
+        type_ (str): Type of data to generate. Either "train" or "predict".
+
+    Returns:
+        pd.DataFrame: Generated data.
+    """
     dates = pd.date_range(
         start=f"{year_from}-{month_from:02d}-{day_from:02d}",
         end=f"{year_to}-{month_to:02d}-{day_to:02d}",
@@ -123,12 +167,14 @@ def generate_data(year_from, month_from, day_from, year_to, month_to, day_to, ty
 
 
 if __name__ == "__main__":
-    print("Simulate data ingestion!")
-
+    configure_logging()
     out_type = sys.argv[-1]
 
-    if len(sys.argv) != 8 or out_type not in ["train", "predict"]:
-        print("USAGE: python get_data.py <year_from> <month_from> <day_from> <year_to> <month_to> <day_to> <train/predict>")
+    if len(sys.argv) != 8:
+        logging.error("Invalid number of arguments.")
+        logging.error("USAGE: python get_data.py <year_from> <month_from> <day_from> <year_to> <month_to> <day_to> <train/predict>")
+    elif out_type not in ["train", "predict"]:
+        logging.error("Invalid output type. Must be either 'train' or 'predict'.")
     else:
         date_args = sys.argv[1:-1]
         date_args = [int(x) for x in date_args]
@@ -141,9 +187,10 @@ if __name__ == "__main__":
 
         data_dir = os.path.relpath("data", os.getcwd())
         file_path = os.path.join(data_dir, file_name)
-        print(f"Saving to {file_path} file...")
 
+        logging.info("Saving %s data to %s...", out_type, file_path)
         if out_type == "train":
             df.to_csv(file_path, index=False)
         else:
-            df.to_parquet(file_path.replace(".csv", ".parquet"), index=False)
+            df.to_parquet(file_path, index=False)
+        logging.info("Data saved successfully.")

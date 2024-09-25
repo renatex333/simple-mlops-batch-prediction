@@ -1,0 +1,3 @@
+24-09-25 12:58     root     INFO     Training model...
+24-09-25 12:58     root     INFO     Model trained successfully!
+24-09-25 12:58     root     INFO     Saving model to models/model-2023-08-01.pkl
